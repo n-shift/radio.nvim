@@ -18,9 +18,14 @@
 )
 
 (fn get-id [alias]
-    (local enc-alias (url-encode alias))
-    (local url (string.format "%s/directory/room/%s" server enc-alias))
-    (. (vim.fn.json_decode (curl ["-XGET" url])) :room_id)
+    (if (= (alias:sub 1 1) "!")
+        alias
+        (do
+            (local enc-alias (url-encode alias))
+            (local url (string.format "%s/directory/room/%s" server enc-alias))
+            (. (vim.fn.json_decode (curl ["-XGET" url])) :room_id)
+        )
+    )
 )
 
 (fn get-token [user password]

@@ -17,9 +17,13 @@ local function url_encode(str)
   return out
 end
 local function get_id(alias)
-  local enc_alias = url_encode(alias)
-  local url = string.format("%s/directory/room/%s", server, enc_alias)
-  return (vim.fn.json_decode(curl({"-XGET", url}))).room_id
+  if (alias:sub(1, 1) == "!") then
+    return alias
+  else
+    local enc_alias = url_encode(alias)
+    local url = string.format("%s/directory/room/%s", server, enc_alias)
+    return (vim.fn.json_decode(curl({"-XGET", url}))).room_id
+  end
 end
 local function get_token(user, password)
   local json = vim.fn.json_encode({type = "m.login.password", user = user, password = password})
@@ -69,7 +73,7 @@ local function setup(cfg)
   return nil
 end
 local function change_room()
-  local function _3_(input)
+  local function _4_(input)
     if input then
       require(config_module).room = input
       return nil
@@ -77,6 +81,6 @@ local function change_room()
       return nil
     end
   end
-  return vim.ui.input({prompt = "Change room: "}, _3_)
+  return vim.ui.input({prompt = "Change room: "}, _4_)
 end
 return {send = exec, setup = setup, change_room = change_room}
