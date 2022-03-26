@@ -1,6 +1,9 @@
 local _2afile_2a = "fnl\\radio.fnl"
-local server = "https://matrix.org/_matrix/client/r0"
+local domain = "matrix.org"
 local config_module = "radio_cfg"
+local function server()
+  return string.format("https://%s/_matrix/client/r0", domain)
+end
 local function curl(args)
   local cmd = vim.tbl_flatten({"curl", args})
   local output = vim.fn.system(cmd)
@@ -21,13 +24,13 @@ local function get_id(alias)
     return alias
   else
     local enc_alias = url_encode(alias)
-    local url = string.format("%s/directory/room/%s", server, enc_alias)
+    local url = string.format("%s/directory/room/%s", server(), enc_alias)
     return (vim.fn.json_decode(curl({"-XGET", url}))).room_id
   end
 end
 local function get_token(user, password)
   local json = vim.fn.json_encode({type = "m.login.password", user = user, password = password})
-  local url = string.format("%s/login", server)
+  local url = string.format("%s/login", server())
   local raw_output = curl({"-XPOST", "-d", json, url})
   local json_output = vim.fn.json_decode(raw_output)
   return json_output.access_token
@@ -35,7 +38,7 @@ end
 local function send_text(id, token, text, f_text)
   local enc_id = url_encode(id)
   local json = vim.fn.json_encode({msgtype = "m.text", body = text, format = "org.matrix.custom.html", formatted_body = f_text})
-  local url = string.format("%s/rooms/%s/send/m.room.message?access_token=%s", server, enc_id, token)
+  local url = string.format("%s/rooms/%s/send/m.room.message?access_token=%s", server(), enc_id, token)
   curl({"-XPOST", "-d", json, url})
   return nil
 end
@@ -69,7 +72,8 @@ local function exec(alias)
   return send_text(id, token, text, f_text)
 end
 local function setup(cfg)
-  config_module = cfg.module
+  config_module = (cfg.module or config_module)
+  domain = (cfg.domain or domain)
   return nil
 end
 local function change_room()

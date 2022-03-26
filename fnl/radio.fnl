@@ -1,5 +1,9 @@
-(local server "https://matrix.org/_matrix/client/r0")
+(var domain "matrix.org")
 (var config_module "radio_cfg")
+
+(fn server []
+    (string.format "https://%s/_matrix/client/r0" domain)
+)
 
 (fn curl [args]
     (local cmd (vim.tbl_flatten ["curl" args]))
@@ -22,7 +26,7 @@
         alias
         (do
             (local enc-alias (url-encode alias))
-            (local url (string.format "%s/directory/room/%s" server enc-alias))
+            (local url (string.format "%s/directory/room/%s" (server) enc-alias))
             (. (vim.fn.json_decode (curl ["-XGET" url])) :room_id)
         )
     )
@@ -34,7 +38,7 @@
         : user
         : password
     }))
-    (local url (string.format "%s/login" server))
+    (local url (string.format "%s/login" (server)))
     (local raw-output (curl ["-XPOST" "-d" json url]))
     (local json-output (vim.fn.json_decode raw-output))
     (. json-output :access_token)
@@ -48,7 +52,7 @@
         :format "org.matrix.custom.html"
         :formatted_body f-text
     }))
-    (local url (string.format "%s/rooms/%s/send/m.room.message?access_token=%s" server enc-id token))
+    (local url (string.format "%s/rooms/%s/send/m.room.message?access_token=%s" (server) enc-id token))
     (curl ["-XPOST" "-d" json url])
     nil
 )
@@ -92,7 +96,8 @@
 )
 
 (fn setup [cfg]
-  (set config_module cfg.module)
+  (set config_module (or cfg.module config_module))
+  (set domain (or cfg.domain domain))
 )
 
 (fn change-room []
